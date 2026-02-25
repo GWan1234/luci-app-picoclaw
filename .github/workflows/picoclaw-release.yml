@@ -52,6 +52,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Display build environment
+        run: |
+          echo "========== Build Info =========="
+          echo "Architecture: ${{ matrix.arch }}"
+          echo "Runner OS:    $(lsb_release -ds 2>/dev/null || echo $RUNNER_OS)"
+          echo "Disk space:"
+          df -h / | tail -1
+          echo "Memory:"
+          free -h | head -2
+          echo "================================"
+
       - name: Building packages
         uses: sbwml/openwrt-gh-action-sdk@main
         env:
@@ -59,6 +70,21 @@ jobs:
           FEEDNAME: packages_ci
           PACKAGES: luci-app-picoclaw
           NO_REFRESH_CHECK: true
+          V: s
+
+      - name: Show compiled packages
+        if: always()
+        run: |
+          echo "========== Compiled IPK packages =========="
+          find bin/ -name "*.ipk" -exec ls -lh {} \; 2>/dev/null || echo "No IPK files found"
+          echo ""
+          echo "========== Build logs (last 100 lines if failed) =========="
+          if [ -f logs/package/feeds/packages_ci/picoclaw/compile.txt ]; then
+            tail -100 logs/package/feeds/packages_ci/picoclaw/compile.txt
+          fi
+          if [ -f logs/package/feeds/packages_ci/luci-app-picoclaw/compile.txt ]; then
+            tail -100 logs/package/feeds/packages_ci/luci-app-picoclaw/compile.txt
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
