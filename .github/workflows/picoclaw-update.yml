@@ -1,0 +1,87 @@
+name: Auto Update PicoClaw
+
+on:
+  schedule:
+    # 每天 UTC 8:00 检查一次（北京时间 16:00）
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-update:
+    name: Check for PicoClaw updates
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current version from Makefile
+        id: current
+        run: |
+          VERSION=$(grep -oP 'PKG_VERSION:=\K.*' picoclaw/Makefile)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Get latest release from GitHub
+        id: latest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/sipeed/picoclaw/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest version: $LATEST"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          if [ "${{ steps.current.outputs.version }}" = "${{ steps.latest.outputs.version }}" ]; then
+            echo "update=false" >> $GITHUB_OUTPUT
+            echo "Already up to date (v${{ steps.current.outputs.version }})"
+          else
+            echo "update=true" >> $GITHUB_OUTPUT
+            echo "New version available: v${{ steps.current.outputs.version }} → v${{ steps.latest.outputs.version }}"
+          fi
+
+      - name: Calculate new PKG_HASH
+        if: steps.compare.outputs.update == 'true'
+        id: hash
+        run: |
+          NEW_VERSION="${{ steps.latest.outputs.version }}"
+          HASH=$(curl -sL "https://codeload.github.com/sipeed/picoclaw/tar.gz/v${NEW_VERSION}" | sha256sum | awk '{print $1}')
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+          echo "New hash: $HASH"
+
+      - name: Update Makefile
+        if: steps.compare.outputs.update == 'true'
+        run: |
+          NEW_VERSION="${{ steps.latest.outputs.version }}"
+          NEW_HASH="${{ steps.hash.outputs.hash }}"
+          OLD_VERSION="${{ steps.current.outputs.version }}"
+
+          # Update PKG_VERSION
+          sed -i "s/PKG_VERSION:=${OLD_VERSION}/PKG_VERSION:=${NEW_VERSION}/" picoclaw/Makefile
+
+          # Update PKG_HASH
+          sed -i "s/PKG_HASH:=.*/PKG_HASH:=${NEW_HASH}/" picoclaw/Makefile
+
+          echo "=== Updated Makefile ==="
+          head -20 picoclaw/Makefile
+
+      - name: Create Pull Request
+        if: steps.compare.outputs.update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "picoclaw: update to v${{ steps.latest.outputs.version }}"
+          title: "picoclaw: update to v${{ steps.latest.outputs.version }}"
+          body: |
+            ## 自动更新 PicoClaw
+
+            | 项目 | 旧值 | 新值 |
+            |------|------|------|
+            | 版本 | `v${{ steps.current.outputs.version }}` | `v${{ steps.latest.outputs.version }}` |
+            | Hash | *(旧)* | `${{ steps.hash.outputs.hash }}` |
+
+            > 🤖 此 PR 由 GitHub Action 自动生成。
+            > 📦 上游 Release: https://github.com/sipeed/picoclaw/releases/tag/v${{ steps.latest.outputs.version }}
+          branch: auto-update/picoclaw-v${{ steps.latest.outputs.version }}
+          labels: |
+            auto-update
+            picoclaw
