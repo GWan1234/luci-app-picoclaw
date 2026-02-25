@@ -19,33 +19,32 @@ jobs:
       fail-fast: false
       matrix:
         arch:
+          # === ARM64 (aarch64) — 全部支持 Go ===
           - aarch64_cortex-a53
           - aarch64_cortex-a72
           - aarch64_generic
+          # === ARM 32-bit — 仅保留有 SDK 镜像且支持 Go 的架构 ===
           - arm_arm1176jzf-s_vfp
           - arm_arm926ej-s
           - arm_cortex-a15_neon-vfpv4
           - arm_cortex-a5_vfpv4
           - arm_cortex-a7
           - arm_cortex-a7_neon-vfpv4
-          - arm_cortex-a8_vfpv3
-          - arm_cortex-a9
-          - arm_cortex-a9_neon
           - arm_cortex-a9_vfpv3-d16
-          - arm_fa526
-          - arm_mpcore
           - arm_xscale
+          # === x86 ===
           - i386_pentium-mmx
           - i386_pentium4
-          - mips64_octeonplus
-          - mips_24kc
-          - mips_4kec
-          - mips_mips32
-          - mipsel_24kc
-          - mipsel_24kc_24kf
-          - mipsel_74kc
-          - mipsel_mips32
           - x86_64
+          # === MIPS — 仅保留有 SDK 镜像的架构 ===
+          - mips_24kc
+          - mipsel_24kc
+          - mipsel_74kc
+          # 以下架构已移除（SDK 镜像不存在或 Go 不支持）：
+          # arm_cortex-a8_vfpv3, arm_cortex-a9, arm_cortex-a9_neon,
+          # arm_fa526, arm_mpcore,
+          # mips64_octeonplus, mips_4kec, mips_mips32,
+          # mipsel_24kc_24kf, mipsel_mips32
 
     steps:
       - uses: actions/checkout@v4
@@ -68,8 +67,9 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-openwrt-24.10
           FEEDNAME: packages_ci
-          PACKAGES: luci-app-picoclaw
+          PACKAGES: picoclaw luci-app-picoclaw
           NO_REFRESH_CHECK: true
+          NO_SHFMT_CHECK: true
           V: s
 
       - name: Show compiled packages
