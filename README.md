@@ -1,22 +1,10 @@
+# 🦐 PicoClaw for OpenWrt
 
-<h1 align="center">
-  🦐 PicoClaw for OpenWrt<br>
-  <small>超轻量级 AI 助手 · OpenWrt LuCI 管理界面</small>
-</h1>
+超轻量级 AI 助手 · OpenWrt LuCI 管理界面
 
-<p align="center">
-  <a target="_blank" href="https://github.com/sipeed/picoclaw">
-    <img src="https://img.shields.io/badge/PicoClaw-v0.1.2-blue.svg?style=flat-square">
-  </a>
-  <a target="_blank" href="https://github.com/sirpdboy/luci-app-ddns-go/releases">
-    <img src="https://img.shields.io/badge/luci--app--picoclaw-v1.0.0-green.svg?style=flat-square">
-  </a>
-  <a target="_blank" href="https://github.com/sipeed/picoclaw/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache%202.0-orange.svg?style=flat-square">
-  </a>
-</p>
-
-<br>
+[![PicoClaw](https://img.shields.io/badge/PicoClaw-v0.1.2-blue.svg?style=flat-square)](https://github.com/sipeed/picoclaw)
+[![luci-app-picoclaw](https://img.shields.io/badge/luci--app--picoclaw-v1.0.0-green.svg?style=flat-square)](https://github.com/sirpdboy/luci-app-ddns-go/releases)
+[![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg?style=flat-square)](https://github.com/sipeed/picoclaw/blob/main/LICENSE)
 
 > [!CAUTION]
 > **🚧 项目状态：实验性 / Vibe Coding 初作 🚧**
@@ -25,8 +13,7 @@
 > 项目尚处于 **早期实验阶段**，可能存在未发现的 Bug、安全隐患或不稳定行为。
 > **请勿将本项目用于任何生产环境或关键业务场景！**
 > 使用本项目所产生的一切后果，由使用者自行承担。
-
-> [!WARNING]
+>
 > **🤖 AI 生成代码声明**
 >
 > 本项目（包括 Makefile、init 脚本、LuCI 界面、RPC 后端等）的代码 **主要由 AI（大语言模型）生成**，
@@ -53,7 +40,7 @@
 PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 AI 助手，使用 Go 语言编写：
 
 | 特性 | 说明 |
-|------|------|
+| ------ | ------ |
 | 🪶 **超轻量** | 运行内存 < 10MB，比同类产品小 99% |
 | 💰 **低成本** | 可在 $10 硬件上运行，比 Mac mini 便宜 98% |
 | ⚡ **极速启动** | 1 秒启动，即使在 0.6GHz 单核设备上 |
@@ -64,8 +51,6 @@ PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 A
 
 ---
 
----
-
 ## 📦 包含内容
 
 本项目包含两个 OpenWrt 软件包：
@@ -73,7 +58,7 @@ PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 A
 ### 1. `picoclaw` — 核心二进制包
 
 | 文件 | 说明 |
-|------|------|
+| ------ | ------ |
 | `Makefile` | OpenWrt Go 交叉编译配置，自动从 GitHub 下载源码并编译 |
 | `files/picoclaw.init` | procd init.d 启动脚本，支持 `picoclaw gateway` 守护进程模式 |
 | `files/picoclaw.conf` | UCI 默认配置（网关、代理、心跳等参数） |
@@ -83,7 +68,7 @@ PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 A
 ### 2. `luci-app-picoclaw` — LuCI Web 管理界面
 
 | 文件 | 说明 |
-|------|------|
+| ------ | ------ |
 | `htdocs/.../picoclaw/config.js` | 配置页面：服务状态、基本设置、网关、AI 模型、心跳 |
 | `htdocs/.../picoclaw/log.js` | 日志页面：实时日志查看、按时间倒序、一键清除 |
 | `root/.../luci-app-picoclaw.json` | LuCI 菜单定义 |
@@ -95,7 +80,7 @@ PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 A
 
 ## 📁 目录结构
 
-```
+```text
 .
 ├── picoclaw/                              # 核心二进制包
 │   ├── Makefile                           # OpenWrt Go 交叉编译 Makefile
@@ -139,7 +124,7 @@ PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 A
 
 ### 方法一：通过 feeds 安装（推荐）
 
-**1. 添加源**
+#### 1. 添加源
 
 编辑 OpenWrt 源码根目录下的 `feeds.conf.default`，添加：
 
@@ -147,7 +132,7 @@ PicoClaw 是一个由 [Sipeed](https://sipeed.com) 开发的超轻量级个人 A
 src-git picoclaw https://github.com/sirpdboy/luci-app-ddns-go
 ```
 
-**2. 更新并安装**
+#### 2. 更新并安装
 
 ```bash
 # 更新 feeds
@@ -158,7 +143,7 @@ scripts/feeds install picoclaw
 scripts/feeds install luci-app-picoclaw
 ```
 
-**3. 配置编译选项**
+#### 3. 配置编译选项
 
 ```bash
 make menuconfig
@@ -169,7 +154,7 @@ make menuconfig
 - `Network` → `Web Servers/Proxies` → `<*> picoclaw`
 - `LuCI` → `Applications` → `<*> luci-app-picoclaw`
 
-**4. 编译**
+#### 4. 编译
 
 ```bash
 # 编译 picoclaw 核心包
@@ -219,7 +204,7 @@ opkg install luci-app-picoclaw_*.ipk
 
 #### 基本配置 (basic)
 
-```
+```ini
 config basic 'config'
         option enabled '0'       # 是否启用服务（0=关闭，1=启用）
         option logger '1'        # 是否启用日志记录
@@ -228,7 +213,7 @@ config basic 'config'
 
 #### 网关配置 (gateway)
 
-```
+```ini
 config gateway 'gateway'
         option host '0.0.0.0'    # 监听地址（0.0.0.0 = 所有接口）
         option port '18790'      # 监听端口
@@ -236,7 +221,7 @@ config gateway 'gateway'
 
 #### Agent 配置 (agent)
 
-```
+```ini
 config agent 'agent'
         option workspace '/etc/picoclaw/workspace'  # 工作目录
         option restrict_to_workspace '0'             # 是否限制在工作目录
@@ -248,7 +233,7 @@ config agent 'agent'
 
 #### 心跳配置 (heartbeat)
 
-```
+```ini
 config heartbeat 'heartbeat'
         option enabled '1'       # 是否启用心跳
         option interval '30'     # 心跳间隔（分钟）
@@ -280,10 +265,10 @@ vi /etc/picoclaw/config.json
 }
 ```
 
-**支持的 AI 模型提供商：**
+支持的 AI 模型提供商：
 
 | 提供商 | model 格式 | 获取 API Key |
-|--------|-----------|-------------|
+| -------- | ----------- | ------------- |
 | DeepSeek | `deepseek/deepseek-chat` | [platform.deepseek.com](https://platform.deepseek.com) |
 | OpenAI | `openai/gpt-5.2` | [platform.openai.com](https://platform.openai.com) |
 | Anthropic | `anthropic/claude-sonnet-4.6` | [console.anthropic.com](https://console.anthropic.com) |
@@ -297,7 +282,7 @@ vi /etc/picoclaw/config.json
 PicoClaw 支持多种消息通道，在 `config.json` 的 `channels` 段配置：
 
 | 通道 | 配置项 | 说明 |
-|------|--------|------|
+| ------ | -------- | ------ |
 | **Telegram** | `token`, `allow_from` | 需要 BotFather 创建机器人 |
 | **Discord** | `token`, `allow_from` | 需要 Discord Developer 创建应用 |
 | **钉钉** | `client_id`, `client_secret` | 需要钉钉开放平台创建应用 |
@@ -339,7 +324,7 @@ PicoClaw 支持多种消息通道，在 `config.json` 的 `channels` 段配置�
 
 PicoClaw 运行时会在工作目录（默认 `/etc/picoclaw/workspace`）中创建以下文件结构：
 
-```
+```text
 /etc/picoclaw/
 ├── config.json              # 主配置文件
 └── workspace/               # Agent 工作目录
@@ -487,7 +472,7 @@ opkg install --force-reinstall luci-app-picoclaw_*.ipk
 ## 📞 相关链接
 
 | 链接 | 说明 |
-|------|------|
+| ------ | ------ |
 | [PicoClaw 官方仓库](https://github.com/sipeed/picoclaw) | PicoClaw 源码和文档 |
 | [PicoClaw 官网](https://picoclaw.io) | 官方网站 |
 | [Sipeed 官网](https://sipeed.com) | 硬件购买渠道 |

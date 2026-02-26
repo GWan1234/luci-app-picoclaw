@@ -36,6 +36,14 @@ CGO_ENABLED:=0
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
+# PicoClaw 的 main.go 使用 //go:embed workspace 嵌入工作区模板文件
+# 源码通过 //go:generate cp -r ../../workspace . 来复制，但 OpenWrt 不会执行 go generate
+# 因此需要在编译前手动完成这个复制步骤
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	$(CP) $(PKG_BUILD_DIR)/workspace $(PKG_BUILD_DIR)/cmd/picoclaw/workspace
+endef
+
 define Package/picoclaw
   TITLE:=PicoClaw - Ultra-Efficient AI Assistant
   SECTION:=net
