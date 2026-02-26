@@ -91,6 +91,7 @@ jobs:
           path: bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
 
       - name: Upload packages
+        if: startsWith(github.ref, 'refs/tags/')
         uses: ncipollo/release-action@v1
         with:
           name: ${{ github.ref_name }}
