@@ -28,13 +28,11 @@ PKG_BUILD_FLAGS:=no-mips16
 GO_PKG:=github.com/sipeed/picoclaw
 GO_PKG_BUILD_PKG:=github.com/sipeed/picoclaw/cmd/picoclaw
 GO_PKG_TAGS:=stdjson
-GO_PKG_LDFLAGS:=-s -w
-
-GO_PKG_LDFLAGS_X:= \
-	$(GO_PKG_BUILD_PKG)/internal.version=$(PKG_VERSION) \
-	$(GO_PKG_BUILD_PKG)/internal.gitCommit=$(PKG_SOURCE_VERSION) \
-	$(GO_PKG_BUILD_PKG)/internal.buildTime=$(shell date +%FT%T%z) \
-	$(GO_PKG_BUILD_PKG)/internal.goVersion=$(shell $(STAGING_DIR_HOSTPKG)/bin/go version | sed 's/go version //')
+GO_PKG_LDFLAGS:=-s -w \
+	-X '$(GO_PKG_BUILD_PKG)/internal.version=$(PKG_VERSION)' \
+	-X '$(GO_PKG_BUILD_PKG)/internal.gitCommit=tarball/$(shell echo $(PKG_HASH) | cut -c 1-7)' \
+	-X '$(GO_PKG_BUILD_PKG)/internal.buildTime=$(shell date +%FT%T%z)' \
+	-X '$(GO_PKG_BUILD_PKG)/internal.goVersion=$(shell $(STAGING_DIR_HOSTPKG)/bin/go version | sed "s/go version //")'
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
