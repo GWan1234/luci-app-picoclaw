@@ -15,8 +15,6 @@ PKG_SOURCE_URL:=https://github.com/sipeed/picoclaw.git
 PKG_SOURCE_VERSION:=main
 PKG_MIRROR_HASH:=skip
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
-
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
 PKG_MAINTAINER:=LIKE2000-ART
@@ -31,7 +29,7 @@ GO_PKG_BUILD_PKG:=github.com/sipeed/picoclaw/cmd/picoclaw
 GO_PKG_TAGS:=stdjson
 GO_PKG_LDFLAGS:=-s -w \
 	-X '$(GO_PKG_BUILD_PKG)/internal.version=$(PKG_VERSION)' \
-	-X '$(GO_PKG_BUILD_PKG)/internal.gitCommit=tarball/$(shell echo $(PKG_HASH) | cut -c 1-7)' \
+	-X '$(GO_PKG_BUILD_PKG)/internal.gitCommit=git/$(PKG_SOURCE_VERSION)' \
 	-X '$(GO_PKG_BUILD_PKG)/internal.buildTime=$(shell date +%FT%T%z)' \
 	-X '$(GO_PKG_BUILD_PKG)/internal.goVersion=$(shell $(STAGING_DIR_HOSTPKG)/bin/go version | sed "s/go version //")'
 
