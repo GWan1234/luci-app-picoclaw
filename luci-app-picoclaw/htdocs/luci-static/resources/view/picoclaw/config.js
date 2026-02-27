@@ -56,7 +56,7 @@ function renderStatus(isRunning, listen_port, version) {
     );
 
     if (isRunning && listen_port) {
-        html += String.format('&#160;<a class="btn cbi-button" href="http://%s:%s" target="_blank">%s</a>',
+        html += String.format('&#160;<a class="btn cbi-button" href="http://%s:%s/health" target="_blank">%s</a>',
             window.location.hostname, listen_port, _('Open Web Interface'));
     }
 
@@ -122,7 +122,7 @@ return view.extend({
 
         o = s.option(form.Flag, 'enabled', _('Enable PicoClaw'));
         o.description = _('Enable the PicoClaw background daemon.');
-        o.default = o.disabled;
+        o.default = '1';
         o.rmempty = false;
 
         o = s.option(form.Value, 'delay', _('Delayed Start (seconds)'));
@@ -150,8 +150,8 @@ return view.extend({
         s.title = _('🤖 Agent Settings');
 
         o = s.option(form.Value, 'workspace', _('Workspace Path'));
-        o.description = _('Absolute path to store AI memories, chats, tasks, and configurations. E.g., /mnt/sda1/picoclaw');
-        o.default = '/etc/picoclaw/workspace';
+        o.description = _('Absolute path to store AI memories, chats, tasks, and configurations. E.g., /opt/picoclaw/workspace');
+        o.default = '/opt/picoclaw/workspace';
         o.rmempty = false;
 
         o = s.option(form.Flag, 'restrict_to_workspace', _('Restrict to workspace (Sandbox)'));

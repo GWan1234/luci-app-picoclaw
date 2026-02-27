@@ -30,137 +30,143 @@ return view.extend({
 
     render: function (configContent) {
         var css = '\
-            .config-editor-wrap { position: relative; } \
-            .config-editor { \
-                width: 100%; min-height: 500px; \
-                font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace; \
-                font-size: 13px; line-height: 1.5; \
-                padding: 12px; resize: vertical; \
-                border: 1px solid #ccc; border-radius: 4px; \
-                tab-size: 2; white-space: pre; \
-                background: #fafafa; color: #333; \
-            } \
-            .config-editor:focus { \
-                border-color: #5897fb; outline: none; \
-                box-shadow: 0 0 0 2px rgba(88, 151, 251, 0.15); \
-            } \
-            .config-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; } \
-            .config-msg { margin-left: 12px; font-size: 13px; } \
-            .config-msg.ok { color: #4caf50; } \
-            .config-msg.err { color: #f44336; } \
+            .config-actions { margin-top: 15px; display: flex; gap: 10px; align-items: center; } \
+            .config-msg { margin-left: 15px; font-size: 14px; font-weight: bold; } \
+            .config-msg.ok { color: #28a745; } \
+            .config-msg.err { color: #dc3545; } \
             .config-footer { \
-                margin-top: 16px; text-align: right; font-style: italic; \
+                margin-top: 20px; text-align: right; font-style: italic; \
                 display: flex; justify-content: space-between; align-items: center; \
             } \
-            .config-path { font-size: 12px; color: #888; font-family: monospace; } \
+            .config-path { font-size: 13px; color: #6c757d; font-family: monospace; background: #e9ecef; padding: 2px 6px; border-radius: 4px; } \
+            .CodeMirror { border: 1px solid #ccc; border-radius: 4px; font-family: "SF Mono", "Fira Code", monospace; font-size: 14px; min-height: 500px; height: auto; } \
         ';
 
-        // Pretty-print if possible
         try {
             var parsed = JSON.parse(configContent);
             configContent = JSON.stringify(parsed, null, 2);
-        } catch (e) { /* keep as-is */ }
+        } catch (e) { }
 
+        var textareaId = 'picoclaw-config-editor-' + Math.floor(Math.random() * 100000);
         var textarea = E('textarea', {
-            'class': 'config-editor',
-            'spellcheck': 'false',
-            'autocomplete': 'off',
-            'autocorrect': 'off',
-            'autocapitalize': 'off',
-            'wrap': 'off'
+            'id': textareaId,
+            'style': 'display: none;'
         }, configContent);
 
-        // Handle Tab key for indentation
-        textarea.addEventListener('keydown', function (e) {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                var start = this.selectionStart;
-                var end = this.selectionEnd;
-                this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
-                this.selectionStart = this.selectionEnd = start + 2;
-            }
-        });
-
         var msgSpan = E('span', { 'class': 'config-msg' });
+        var cmInstance = null;
+
+        var deps = [
+            E('link', { 'rel': 'stylesheet', 'href': '/luci-static/resources/codemirror/lib/codemirror.css' }),
+            E('link', { 'rel': 'stylesheet', 'href': '/luci-static/resources/codemirror/theme/dracula.css' }),
+            E('script', { 'src': '/luci-static/resources/codemirror/lib/codemirror.js' }),
+            E('script', { 'src': '/luci-static/resources/codemirror/mode/javascript/javascript.js' })
+        ];
 
         var formatBtn = E('button', {
             'class': 'cbi-button cbi-button-neutral',
             'click': function () {
+                var content = cmInstance ? cmInstance.getValue() : textarea.value;
                 try {
-                    var obj = JSON.parse(textarea.value);
-                    textarea.value = JSON.stringify(obj, null, 2);
+                    var obj = JSON.parse(content);
+                    var formatted = JSON.stringify(obj, null, 2);
+                    if (cmInstance) {
+                        cmInstance.setValue(formatted);
+                    } else {
+                        textarea.value = formatted;
+                    }
                     msgSpan.className = 'config-msg ok';
-                    msgSpan.textContent = '✓ ' + _('JSON format valid');
+                    msgSpan.textContent = '✓ ' + _('JSON Formatted');
                 } catch (e) {
                     msgSpan.className = 'config-msg err';
-                    msgSpan.textContent = '✗ ' + _('JSON format error') + ': ' + e.message;
+                    msgSpan.textContent = '✗ ' + _('JSON Error') + ': ' + e.message;
                 }
             }
         }, _('Format JSON'));
 
-        var saveBtn = E('button', {
-            'class': 'cbi-button cbi-button-apply',
-            'click': function () {
-                var content = textarea.value;
-
-                // Validate JSON
-                try {
-                    JSON.parse(content);
-                } catch (e) {
-                    msgSpan.className = 'config-msg err';
-                    msgSpan.textContent = '✗ ' + _('JSON format error') + ': ' + e.message;
-                    return;
-                }
-
-                saveBtn.disabled = true;
-                saveBtn.textContent = _('Saving...');
-                msgSpan.textContent = '';
-
-                setConfig(content).then(function (res) {
-                    if (res && res.code === 0) {
-                        msgSpan.className = 'config-msg ok';
-                        msgSpan.textContent = '✓ ' + _('Config saved, PicoClaw restarting...');
-                    } else {
-                        msgSpan.className = 'config-msg err';
-                        msgSpan.textContent = '✗ ' + _('Save failed') + ': ' + (res.stderr || _('Unknown error'));
-                    }
-                }).catch(function (err) {
-                    msgSpan.className = 'config-msg err';
-                    msgSpan.textContent = '✗ ' + _('Save failed') + ': ' + err.message;
-                }).finally(function () {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = _('Save & Apply');
-                });
-            }
-        }, _('Save & Apply'));
-
-        return E('div', { 'class': 'cbi-map' }, [
+        var mapDiv = E('div', { 'class': 'cbi-map' }, [
             E('style', [css]),
-            E('h2', {}, _('Manual Settings')),
+            deps[0], deps[1], deps[2], deps[3],
+            E('h2', {}, _('📝 Manual Settings')),
             E('div', { 'class': 'cbi-map-descr' },
-                _('Edit config.json directly. After saving, PicoClaw will be automatically restarted.')),
+                _('Edit the raw <code>config.json</code> using the advanced CodeMirror editor. The service restarts automatically upon saving.')),
             E('div', { 'class': 'cbi-section' }, [
-                E('div', { 'class': 'config-editor-wrap' }, [textarea]),
+                textarea,
                 E('div', { 'class': 'config-actions' }, [
-                    saveBtn,
                     formatBtn,
                     msgSpan
                 ]),
                 E('div', { 'class': 'config-footer' }, [
-                    E('span', { 'class': 'config-path' }, CONFIG_PATH),
+                    E('span', { 'class': 'config-path' }, '📁 ' + CONFIG_PATH),
                     E('span', {}, [
                         E('a', {
                             'href': 'https://github.com/sipeed/picoclaw/blob/main/README.md',
                             'target': '_blank',
-                            'style': 'text-decoration: none;'
+                            'style': 'text-decoration: none; color: #007bff; font-weight: bold;'
                         }, '📖 ' + _('Config Reference'))
                     ])
                 ])
             ])
         ]);
+
+        // Init CodeMirror after DOM attaches
+        setTimeout(function () {
+            var el = document.getElementById(textareaId);
+            if (el && window.CodeMirror) {
+                cmInstance = window.CodeMirror.fromTextArea(el, {
+                    mode: "application/json",
+                    theme: "dracula",
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    matchBrackets: true,
+                    tabSize: 2
+                });
+                // Store instance on the window so LuCI handlers can access it
+                window.picoclawCMInstance = cmInstance;
+            }
+        }, 500);
+
+        return mapDiv;
     },
 
-    handleSaveApply: null,
-    handleSave: null,
-    handleReset: null
+    handleSave: function (ev) {
+        var content = window.picoclawCMInstance ? window.picoclawCMInstance.getValue() : '';
+        if (!content) return Promise.resolve();
+
+        try {
+            JSON.parse(content);
+        } catch (e) {
+            ui.addNotification(null, E('p', _('JSON Error') + ': ' + e.message), 'error');
+            return Promise.reject(new Error('Invalid JSON'));
+        }
+
+        return setConfig(content).then(function (res) {
+            if (res && res.code === 0) {
+                ui.addNotification(null, E('p', _('Config saved successfully.')), 'info');
+            } else {
+                ui.addNotification(null, E('p', _('Save failed')), 'error');
+                return Promise.reject(new Error('Save failed'));
+            }
+        });
+    },
+
+    handleSaveApply: function (ev) {
+        return this.handleSave(ev).then(function () {
+            ui.addNotification(null, E('p', _('Config saved, PicoClaw restarting...')), 'info');
+            return fs.exec('/etc/init.d/picoclaw', ['restart']);
+        });
+    },
+
+    handleReset: function (ev) {
+        return getConfig().then(function (result) {
+            var content = result.content || '{}';
+            try {
+                content = JSON.stringify(JSON.parse(content), null, 2);
+            } catch (e) { }
+
+            if (window.picoclawCMInstance) {
+                window.picoclawCMInstance.setValue(content);
+            }
+        });
+    }
 });
